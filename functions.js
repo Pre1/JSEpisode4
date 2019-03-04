@@ -8,6 +8,9 @@
 function getBookById(bookId, books) {
   let res = books.filter((book) => book.id === bookId)
   return res.length ? res[0] : undefined
+
+  // if won't find -> undefined 
+  // return books.find(book => book.id === bookId)
 }
 
 /**************************************************************
@@ -21,6 +24,10 @@ function getAuthorByName(authorName, authors) {
   let res = authors.filter((author) => 
     author.name.toLowerCase() === authorName.toLowerCase())
   return res.length ? res[0] : undefined
+
+  // return books.find(
+  //   author => author.name.toLowerCase() === authorName.toLowerCase()
+  // )
 }
 
 /**************************************************************
@@ -32,11 +39,10 @@ function getAuthorByName(authorName, authors) {
 function bookCountsByAuthor(authors) {
   // Your code goes here
   return authors.map( (auth) => {
-    let obj = {
+    return {
       author: auth.name,
       bookCount: auth.books.length
     }
-    return obj
   });
 }
 
@@ -73,17 +79,13 @@ function titlesByAuthorName(authorName, authors, books) {
   // Your code goes here
 
   let auth = getAuthorByName(authorName, authors)
-  // console.log("author object: ", auth)
   if (auth) {
     let listAuthBooks = auth.books
-    // console.log("listAuthBooks: ", auth.books)
-
-    let testFilter = books.filter( (elm) => listAuthBooks.includes(elm.id))
-    // console.log("testFilter: ", testFilter)
-    return books.filter( (elm) => listAuthBooks.includes(elm.id))
-    .map((elm) => elm.title)
+    return books
+      .filter( (elm) => listAuthBooks.includes(elm.id))
+      .map((elm) => elm.title)
   } 
-  // if the author not found
+
   else {
     return []
   }
@@ -98,16 +100,13 @@ function titlesByAuthorName(authorName, authors, books) {
  ****************************************************************/
 function mostProlificAuthor(authors) {
   // Your code goes here
-  let mostProf = ''
-  let maxBooks = 0
+  let mostProf = authors[0]
   authors.forEach( (elm) => {
-    if (elm.books.length > maxBooks) {
-      maxBooks = elm.books.length
-      mostProf = elm.name
+    if (elm.books.length > mostProf.books.length) {
+      mostProf = elm
     }
-
   })
-  return mostProf
+  return mostProf.name
 }
 
 /**************************************************************
@@ -135,22 +134,18 @@ function mostProlificAuthor(authors) {
  ****************************************************************/
 function relatedBooks(bookId, authors, books) {
   // Your code goes here
-  // let listTitleBooks
-  let authNames = books.filter( (book) => bookId === book.id )[0]
-  // .authors[0].name
-  console.log("authNames: ", authNames)
+  let authNames = getBookById(bookId, books)
 
   let authTitles = []
 
   if (authNames.authors.length > 1) {
     authNames.authors.forEach((elm) => { 
-      authTitles.push(titlesByAuthorName(elm.name, authors, books))
+      authTitles.push(...titlesByAuthorName(elm.name, authors, books))
     })
-    return [...new Set(authTitles.flat())]
+    return [...new Set(authTitles)]
   }
 
   authTitles = titlesByAuthorName(authNames.authors[0].name, authors, books)
-  // console.log("[single] authTitles: ", authTitles)
   return authTitles
 }
 
@@ -162,7 +157,27 @@ function relatedBooks(bookId, authors, books) {
  *   co-authored the greatest number of books
  ****************************************************************/
 function friendliestAuthor(authors) {
-  // Your code goes here
+  authors.forEach(author => {
+    author.coauthoringCount = 0;
+    authors.forEach(secondAuthor => {
+      if (secondAuthor.name !== author.name) {
+        const sharedBooks = secondAuthor.books.filter(bookId =>
+          author.books.includes(bookId)
+        );
+        author.coauthoringCount += sharedBooks.length;
+      }
+    });
+  });
+
+  let friendlyAuthor = authors[0];
+
+  authors.forEach(author => {
+    if (author.coauthoringCount > friendlyAuthor.coauthoringCount) {
+      friendlyAuthor = author;
+    }
+  });
+
+  return friendlyAuthor.name;
 }
 
 module.exports = {
